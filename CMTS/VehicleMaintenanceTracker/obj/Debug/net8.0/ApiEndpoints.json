@@ -1,0 +1,531 @@
+[
+  {
+    "ContainingType": "VehicleMaintenanceTracker.Controllers.AdminController",
+    "Method": "CreateAdmin",
+    "RelativePath": "api/admin/create-admin",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "model",
+        "Type": "VehicleMaintenanceTracker.DTos.RegisterRequest",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "VehicleMaintenanceTracker.Controllers.AdminController",
+    "Method": "GetDashboardSummary",
+    "RelativePath": "api/admin/dashboard",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "VehicleMaintenanceTracker.Controllers.AdminController",
+    "Method": "GetAllMaintenanceRequests",
+    "RelativePath": "api/admin/maintenance-requests",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "VehicleMaintenanceTracker.Controllers.AdminController",
+    "Method": "UpdateMaintenanceStatus",
+    "RelativePath": "api/admin/maintenance-requests/{requestId}",
+    "HttpMethod": "PUT",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "requestId",
+        "Type": "System.Int32",
+        "IsRequired": true
+      },
+      {
+        "Name": "model",
+        "Type": "VehicleMaintenanceTracker.Controllers.UpdateMaintenanceRequest",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "VehicleMaintenanceTracker.Controllers.AdminController",
+    "Method": "GetAllServices",
+    "RelativePath": "api/admin/services",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "VehicleMaintenanceTracker.Controllers.AdminController",
+    "Method": "AddService",
+    "RelativePath": "api/admin/services",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "model",
+        "Type": "VehicleMaintenanceTracker.Controllers.MaintenanceServiceRequest",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "VehicleMaintenanceTracker.Controllers.AdminController",
+    "Method": "UpdateService",
+    "RelativePath": "api/admin/services/{serviceId}",
+    "HttpMethod": "PUT",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "serviceId",
+        "Type": "System.Int32",
+        "IsRequired": true
+      },
+      {
+        "Name": "model",
+        "Type": "VehicleMaintenanceTracker.Controllers.MaintenanceServiceRequest",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "VehicleMaintenanceTracker.Controllers.AdminController",
+    "Method": "DeleteService",
+    "RelativePath": "api/admin/services/{serviceId}",
+    "HttpMethod": "DELETE",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "serviceId",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "VehicleMaintenanceTracker.Controllers.AdminController",
+    "Method": "GetAllUsers",
+    "RelativePath": "api/admin/users",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "VehicleMaintenanceTracker.Controllers.AdminController",
+    "Method": "GetUserById",
+    "RelativePath": "api/admin/users/{userId}",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "userId",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "VehicleMaintenanceTracker.Controllers.AdminController",
+    "Method": "ChangeUserRole",
+    "RelativePath": "api/admin/users/{userId}/role",
+    "HttpMethod": "PUT",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "userId",
+        "Type": "System.Int32",
+        "IsRequired": true
+      },
+      {
+        "Name": "request",
+        "Type": "VehicleMaintenanceTracker.DTos.ChangeRoleRequest",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "VehicleMaintenanceTracker.Controllers.AuthController",
+    "Method": "ChangePassword",
+    "RelativePath": "api/auth/change-password",
+    "HttpMethod": "PUT",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "model",
+        "Type": "VehicleMaintenanceTracker.DTos.ChangePasswordRequest",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "VehicleMaintenanceTracker.Controllers.AuthController",
+    "Method": "Login",
+    "RelativePath": "api/auth/login",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "model",
+        "Type": "VehicleMaintenanceTracker.DTos.LoginRequest",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "VehicleMaintenanceTracker.Controllers.AuthController",
+    "Method": "GetProfile",
+    "RelativePath": "api/auth/profile",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "VehicleMaintenanceTracker.Controllers.AuthController",
+    "Method": "UpdateProfile",
+    "RelativePath": "api/auth/profile",
+    "HttpMethod": "PUT",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "model",
+        "Type": "VehicleMaintenanceTracker.DTos.UpdateProfileRequest",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "VehicleMaintenanceTracker.Controllers.AuthController",
+    "Method": "Register",
+    "RelativePath": "api/auth/register",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "model",
+        "Type": "VehicleMaintenanceTracker.DTos.RegisterRequest",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "VehicleMaintenanceTracker.Controllers.MaintenanceRequestController",
+    "Method": "BookService",
+    "RelativePath": "api/maintenance",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "requestDto",
+        "Type": "VehicleMaintenanceTracker.Controllers.MaintenanceRequestController\u002BBookServiceDto",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "VehicleMaintenanceTracker.Controllers.MaintenanceRequestController",
+    "Method": "GetUserMaintenanceRequests",
+    "RelativePath": "api/maintenance",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "VehicleMaintenanceTracker.Controllers.MaintenanceServiceController",
+    "Method": "AddService",
+    "RelativePath": "api/maintenance-services",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "serviceDto",
+        "Type": "VehicleMaintenanceTracker.DTos.MaintenanceServiceDto",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "VehicleMaintenanceTracker.Controllers.MaintenanceServiceController",
+    "Method": "GetAllServices",
+    "RelativePath": "api/maintenance-services",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "VehicleMaintenanceTracker.Controllers.MaintenanceServiceController",
+    "Method": "GetServiceById",
+    "RelativePath": "api/maintenance-services/{id}",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "VehicleMaintenanceTracker.Controllers.MaintenanceServiceController",
+    "Method": "UpdateService",
+    "RelativePath": "api/maintenance-services/{id}",
+    "HttpMethod": "PUT",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Int32",
+        "IsRequired": true
+      },
+      {
+        "Name": "serviceDto",
+        "Type": "VehicleMaintenanceTracker.DTos.MaintenanceServiceDto",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "VehicleMaintenanceTracker.Controllers.MaintenanceServiceController",
+    "Method": "DeleteService",
+    "RelativePath": "api/maintenance-services/{id}",
+    "HttpMethod": "DELETE",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "VehicleMaintenanceTracker.Controllers.MaintenanceRequestController",
+    "Method": "UpdateMaintenanceStatus",
+    "RelativePath": "api/maintenance/admin/{id}",
+    "HttpMethod": "PUT",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Int32",
+        "IsRequired": true
+      },
+      {
+        "Name": "statusDto",
+        "Type": "VehicleMaintenanceTracker.DTos.UpdateMaintenanceStatusDto",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "VehicleMaintenanceTracker.Controllers.MaintenanceRequestController",
+    "Method": "UpdateCompletionDate",
+    "RelativePath": "api/maintenance/admin/completion/{id}",
+    "HttpMethod": "PUT",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Int32",
+        "IsRequired": true
+      },
+      {
+        "Name": "completionDto",
+        "Type": "VehicleMaintenanceTracker.Controllers.MaintenanceRequestController\u002BUpdateCompletionDateDto",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "VehicleMaintenanceTracker.Controllers.MaintenanceRequestController",
+    "Method": "UpdateAdminNote",
+    "RelativePath": "api/maintenance/admin/note/{id}",
+    "HttpMethod": "PUT",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Int32",
+        "IsRequired": true
+      },
+      {
+        "Name": "noteDto",
+        "Type": "VehicleMaintenanceTracker.Controllers.MaintenanceRequestController\u002BUpdateAdminNoteDto",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "VehicleMaintenanceTracker.Controllers.MaintenanceRequestController",
+    "Method": "GetAllMaintenanceRequests",
+    "RelativePath": "api/maintenance/all-requests",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "VehicleMaintenanceTracker.Controllers.OdometerReadingController",
+    "Method": "AddOdometerReading",
+    "RelativePath": "api/odometer",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "readingDto",
+        "Type": "VehicleMaintenanceTracker.DTos.OdometerReadingDto",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "VehicleMaintenanceTracker.Controllers.OdometerReadingController",
+    "Method": "GetUserOdometerReadings",
+    "RelativePath": "api/odometer/history",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "vehicleId",
+        "Type": "System.Nullable\u00601[[System.Int32, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]",
+        "IsRequired": false
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "VehicleMaintenanceTracker.Controllers.VehicleController",
+    "Method": "AddVehicle",
+    "RelativePath": "api/vehicles",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "vehicleDto",
+        "Type": "VehicleMaintenanceTracker.DTos.VehicleDto",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "VehicleMaintenanceTracker.Controllers.VehicleController",
+    "Method": "GetUserVehicles",
+    "RelativePath": "api/vehicles",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "VehicleMaintenanceTracker.Controllers.VehicleController",
+    "Method": "UpdateVehicle",
+    "RelativePath": "api/vehicles/{vehicleId}",
+    "HttpMethod": "PUT",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "vehicleId",
+        "Type": "System.Int32",
+        "IsRequired": true
+      },
+      {
+        "Name": "vehicleDto",
+        "Type": "VehicleMaintenanceTracker.DTos.UpdateVehicleDto",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "VehicleMaintenanceTracker.Controllers.VehicleController",
+    "Method": "GetAllVehiclesForAdmin",
+    "RelativePath": "api/vehicles/admin",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "VehicleMaintenanceTracker.Controllers.VehicleController",
+    "Method": "UpdateVehicleStatus",
+    "RelativePath": "api/vehicles/admin/update-status/{vehicleId}",
+    "HttpMethod": "PUT",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "vehicleId",
+        "Type": "System.Int32",
+        "IsRequired": true
+      },
+      {
+        "Name": "statusDto",
+        "Type": "VehicleMaintenanceTracker.DTos.UpdateVehicleStatusDto",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  }
+]
