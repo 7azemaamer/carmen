@@ -116,7 +116,25 @@ const Home = () => {
 
   const handleReadingSubmit = async (values) => {
     try {
+      const vehicleId = parseInt(values.vehicleId);
       const reading = parseInt(values.reading);
+
+      if (!vehicleId) {
+        form.setError("vehicleId", {
+          type: "manual",
+          message: "Please select a vehicle",
+        });
+        return;
+      }
+
+      if (isNaN(reading) || reading <= 0) {
+        form.setError("reading", {
+          type: "manual",
+          message: "Please enter a valid reading",
+        });
+        return;
+      }
+
       if (reading <= latestReading?.reading) {
         form.setError("reading", {
           type: "manual",
@@ -125,22 +143,25 @@ const Home = () => {
         return;
       }
 
-      // Submit the reading but we don't need to use the response
+      // Submit the reading
       await instance.post("/odometer", {
-        VehicleId: parseInt(values.vehicleId),
+        VehicleId: vehicleId,
         Reading: reading,
         ReadingDate: new Date().toISOString(),
       });
 
-      // Filter services for the current reading
+      // Refresh data to get the latest reading
+      await fetchUserData();
+
+      // Find applicable services for this reading
       const filteredServices = availableServices.filter(
         (service) =>
           reading >= service.minOdometer && reading <= service.maxOdometer
       );
 
-      // Only show services that are applicable for this reading
+      // Only show services modal if applicable services exist
       if (filteredServices.length > 0) {
-        // Temporarily store only the filtered services for display
+        // Store the filtered services for display
         setAvailableServices(filteredServices);
         setShowServiceModal(true);
         addToast({
@@ -150,15 +171,13 @@ const Home = () => {
           duration: 3000,
         });
       } else {
-        // No services available for this reading
         addToast({
           type: "success",
           message: "✅ Reading submitted successfully!",
           description: `Your ${reading.toLocaleString()} km reading has been recorded.`,
           duration: 4000,
         });
-        form.reset();
-        fetchUserData();
+        form.setValue("reading", "");
       }
     } catch (err) {
       console.error("Failed to submit reading:", err);
@@ -171,79 +190,98 @@ const Home = () => {
     }
   };
 
-  const handleServiceSelection = async () => {
+  const handleServiceSelection = async (e) => {
+    e.preventDefault();
+
     if (selectedServices.length === 0) {
       addToast({
-        type: "error",
-        message: "❌ No services selected",
-        description: "Please select at least one service",
-        duration: 4000,
+        type: "warning",
+        message: "No services selected",
+        description:
+          "Please select at least one service or click 'Skip Services'",
       });
       return;
     }
 
+    setLoading(true);
+
     try {
       const reading = parseInt(form.getValues("reading"));
-      const vehicleId = parseInt(form.getValues("vehicleId"));
+      const vehicleId = form.getValues("vehicleId");
 
-      const selectedVehicle = vehicles.find(
-        (v) => (v._id || v.id).toString() === vehicleId.toString()
-      );
-      const vehicleInfo = selectedVehicle
-        ? `${selectedVehicle.type || selectedVehicle.vehicleType} ${
-            selectedVehicle.licensePlate || selectedVehicle.licensePlateNumber
-          }`
-        : "your vehicle";
+      const selectedServiceObjects = selectedServices
+        .map((serviceId) =>
+          availableServices.find((s) => s.id.toString() === serviceId)
+        )
+        .filter(Boolean);
 
-      console.log("Selected Services:", selectedServices);
-      console.log("Available Services:", availableServices);
-
-      const requests = selectedServices.map((serviceId) => {
-        const service = availableServices.find(
-          (s) => s.id.toString() === serviceId
-        );
-        console.log("Submitting service:", service);
-        return instance.post("/maintenance", {
-          VehicleId: vehicleId,
-          ServiceId: parseInt(serviceId),
+      for (const service of selectedServiceObjects) {
+        await instance.post("/maintenance", {
+          VehicleId: parseInt(vehicleId),
+          ServiceId: service.id,
           Reading: reading,
         });
-      });
-
-      await Promise.all(requests);
-
-      await instance.put(`/vehicles/admin/update-status/${vehicleId}`, {
-        Status: "under_maintenance",
-      });
-
-      const serviceNames = selectedServices
-        .map((serviceId) => {
-          const service = availableServices.find(
-            (s) => s.id.toString() === serviceId
-          );
-          return service ? service.name : "Service";
-        })
-        .join(", ");
+      }
 
       addToast({
         type: "success",
-        message: "✅ Maintenance requests submitted!",
-        description: `${serviceNames} for ${vehicleInfo} scheduled. Status: Under Maintenance`,
+        message: "✅ Reading and services submitted!",
+        description: `Your ${reading.toLocaleString()} km reading and ${
+          selectedServiceObjects.length
+        } service request(s) have been recorded: ${selectedServiceObjects
+          .map((service) => service.name)
+          .join(", ")}`,
         duration: 5000,
       });
 
       setShowServiceModal(false);
       setSelectedServices([]);
-      form.reset();
-      fetchUserData();
-    } catch (err) {
-      console.error("Failed to submit maintenance request:", err);
+
+      await fetchUserData();
+      form.setValue("reading", "");
+    } catch (error) {
+      console.error("Error submitting services", error);
       addToast({
         type: "error",
-        message: "❌ Failed to submit maintenance request",
-        description: err.response?.data?.message || "Please try again.",
+        message: "Error submitting services",
+        description: error.message || "Please try again.",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSkipServices = async (e) => {
+    e.preventDefault();
+
+    setLoading(true);
+
+    try {
+      // We don't need to create another reading since one was already created
+      // in the handleReadingSubmit function
+
+      const reading = parseInt(form.getValues("reading"));
+
+      addToast({
+        type: "success",
+        message: "Reading submitted",
+        description: `Your ${reading.toLocaleString()} km reading has been recorded.`,
         duration: 4000,
       });
+
+      setShowServiceModal(false);
+
+      await fetchUserData();
+      form.setValue("reading", "");
+    } catch (error) {
+      console.error("Error submitting reading", error);
+      addToast({
+        type: "error",
+        message: "Error submitting reading",
+        description: error.message || "Please try again.",
+      });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -546,6 +584,24 @@ const Home = () => {
                                 service.cost || service.serviceCost
                               ).toLocaleString()}
                             </div>
+                            <div className="text-xs text-muted-foreground mt-1">
+                              <span className="text-muted-foreground/70">
+                                Recommended at:
+                              </span>{" "}
+                              {service.minOdometer.toLocaleString()} -{" "}
+                              {service.maxOdometer.toLocaleString()} km
+                            </div>
+                            <div className="text-xs mt-1">
+                              <span className="text-muted-foreground/70">
+                                Your reading:
+                              </span>{" "}
+                              <span className="font-medium">
+                                {parseInt(
+                                  form.getValues("reading")
+                                ).toLocaleString()}{" "}
+                                km
+                              </span>
+                            </div>
                           </div>
                         </div>
                       </CardContent>
@@ -558,22 +614,7 @@ const Home = () => {
           <DialogFooter>
             <Button
               variant="outline"
-              onClick={() => {
-                setShowServiceModal(false);
-                setSelectedServices([]);
-
-                const reading = parseInt(form.getValues("reading"));
-                // Show the awesome success message on cancel too
-                addToast({
-                  type: "success",
-                  message: "✅ Reading submitted successfully!",
-                  description: `Your ${reading.toLocaleString()} km reading has been recorded.`,
-                  duration: 4000,
-                });
-
-                form.reset();
-                fetchUserData();
-              }}
+              onClick={handleSkipServices}
               className="cursor-pointer"
             >
               Skip Services

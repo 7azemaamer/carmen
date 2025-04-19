@@ -106,6 +106,7 @@ namespace VehicleMaintenanceTracker.Controllers
 
             var requests = await _context.MaintenanceRequests
                 .Include(m => m.Vehicle)
+                .Include(m => m.OdometerReading)
                 .Include(m => m.MaintenanceRequestServices)
                     .ThenInclude(mrs => mrs.MaintenanceService)
                 .Where(m => m.Vehicle.UserId == userId)
@@ -115,6 +116,7 @@ namespace VehicleMaintenanceTracker.Controllers
                     vehicleId = m.VehicleId,
                     requestDate = m.RequestDate,
                     status = m.Status,
+                    reading = m.OdometerReading.Reading,
                     completionDate = m.CompletionDate.HasValue
                         ? m.CompletionDate.Value.ToString("yyyy-MM-dd HH:mm:ss")  
                         : "The completion date will be updated as soon as details are available.",

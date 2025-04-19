@@ -29,7 +29,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { CalendarIcon, CarIcon, UserIcon, WrenchIcon } from "lucide-react";
-import { useToastStore } from "@/lib/store";
+import { toast } from "sonner";
 import { format } from "date-fns";
 import { Calendar } from "@/components/ui/calendar";
 import {
@@ -71,7 +71,6 @@ const AdminRequests = () => {
   const [showModal, setShowModal] = useState(false);
   const [adminNote, setAdminNote] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
-  const { addToast } = useToastStore();
   const [selectedCompletionDate, setSelectedCompletionDate] = useState(null);
 
   const fetchRequests = async () => {
@@ -133,18 +132,19 @@ const AdminRequests = () => {
         });
       }
 
-      if (adminNote) {
+      // Only save admin notes if they've changed
+      const originalNotes = selectedRequest.adminNotes || "";
+      if (adminNote !== originalNotes) {
         await instance.put(`/maintenance/admin/note/${requestId}`, {
           adminNotes: adminNote,
         });
       }
 
-      addToast({
-        type: "success",
-        message: `Maintenance request ${
+      toast.success(
+        `Maintenance request ${
           newStatus === "completed" ? "completed" : "status updated"
-        } successfully!`,
-      });
+        } successfully!`
+      );
 
       fetchRequests();
       setShowModal(false);
@@ -152,10 +152,7 @@ const AdminRequests = () => {
       setSelectedCompletionDate(null);
     } catch (err) {
       console.error("Failed to update request status:", err);
-      addToast({
-        type: "error",
-        message: "Failed to update request status. Please try again.",
-      });
+      toast.error("Failed to update request status. Please try again.");
     }
   };
 
@@ -185,18 +182,12 @@ const AdminRequests = () => {
         }
       );
 
-      addToast({
-        type: "success",
-        message: "Completion date updated successfully!",
-      });
+      toast.success("Completion date updated successfully!");
 
       fetchRequests();
     } catch (err) {
       console.error("Failed to update completion date:", err);
-      addToast({
-        type: "error",
-        message: "Failed to update completion date. Please try again.",
-      });
+      toast.error("Failed to update completion date. Please try again.");
     }
   };
 
@@ -527,13 +518,54 @@ const AdminRequests = () => {
                       Admin Notes
                     </CardTitle>
                   </CardHeader>
-                  <CardContent className="pt-0">
+                  <CardContent className="pt-0 space-y-4">
                     <Textarea
                       value={adminNote}
                       onChange={(e) => setAdminNote(e.target.value)}
                       placeholder="Add any relevant notes about this maintenance request..."
                       className="min-h-[80px] resize-none"
                     />
+                    <Button
+                      className="w-full"
+                      variant={
+                        adminNote !== (selectedRequest.adminNotes || "")
+                          ? "default"
+                          : "outline"
+                      }
+                      disabled={
+                        adminNote === (selectedRequest.adminNotes || "")
+                      }
+                      onClick={async () => {
+                        try {
+                          await instance.put(
+                            `/maintenance/admin/note/${selectedRequest.id}`,
+                            {
+                              adminNotes: adminNote,
+                            }
+                          );
+
+                          toast.success("Admin notes saved successfully!");
+
+                          // Update the selectedRequest object locally to reflect the new notes
+                          setSelectedRequest({
+                            ...selectedRequest,
+                            adminNotes: adminNote,
+                          });
+
+                          // Also update the main data
+                          fetchRequests();
+                        } catch (err) {
+                          console.error("Failed to save admin notes:", err);
+                          toast.error(
+                            "Failed to save admin notes. Please try again."
+                          );
+                        }
+                      }}
+                    >
+                      {adminNote !== (selectedRequest.adminNotes || "")
+                        ? "Save Notes"
+                        : "No Changes"}
+                    </Button>
                   </CardContent>
                 </Card>
 

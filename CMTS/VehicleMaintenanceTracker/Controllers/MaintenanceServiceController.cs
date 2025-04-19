@@ -2,6 +2,8 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System;
+using System.Threading.Tasks;
 using VehicleMaintenanceTracker.Context;
 using VehicleMaintenanceTracker.DTos;
 using VehicleMaintenanceTracker.Modules;
@@ -111,13 +113,50 @@ namespace VehicleMaintenanceTracker.Controllers
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> DeleteService(int id)
         {
-            var service = await _context.MaintenanceServices.FindAsync(id);
-            if (service == null)
-                return NotFound(new { message = "Service not found." });
+            try
+            {
+                var service = await _context.MaintenanceServices.FindAsync(id);
+                if (service == null)
+                    return NotFound(new { message = "Service not found." });
 
-            _context.MaintenanceServices.Remove(service);
-            await _context.SaveChangesAsync();
-            return Ok(new { message = "Service deleted successfully." });
+                // Check for references in a way that won't throw exceptions
+                bool hasReferences = await _context.MaintenanceRequestServices
+                    .AnyAsync(mrs => mrs.ServiceId == id);
+
+                if (hasReferences)
+                {
+                    // Return a more detailed error message
+                    return BadRequest(new { 
+                        message = "Cannot delete this service because it is associated with maintenance requests.",
+                        detail = "You must delete the associated maintenance requests first or remove this service from them.",
+                        hasReferences = true
+                    });
+                }
+
+                // Safer approach to delete the service
+                _context.MaintenanceServices.Remove(service);
+                await _context.SaveChangesAsync();
+                return Ok(new { message = "Service deleted successfully." });
+            }
+            catch (DbUpdateException dbEx)
+            {
+                // Handle database constraint violation specifically
+                return StatusCode(500, new { 
+                    message = "Database constraint violation when deleting the service.",
+                    detail = "This service is referenced by existing maintenance requests and cannot be deleted.",
+                    error = dbEx.InnerException?.Message ?? dbEx.Message,
+                    hasReferences = true
+                });
+            }
+            catch (Exception ex)
+            {
+                // Handle any other exceptions
+                return StatusCode(500, new { 
+                    message = "An error occurred while deleting the service.",
+                    detail = ex.InnerException?.Message ?? ex.Message,
+                    stackTrace = ex.StackTrace
+                });
+            }
         }
 
       

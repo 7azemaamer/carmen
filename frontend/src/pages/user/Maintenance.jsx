@@ -94,6 +94,11 @@ const Maintenance = () => {
                   Submitted on{" "}
                   {new Date(request.requestDate).toLocaleDateString()}
                 </p>
+                {request.reading && (
+                  <p className="text-sm text-gray-600 mt-1">
+                    Odometer Reading: {request.reading.toLocaleString()} km
+                  </p>
+                )}
               </div>
 
               <div className="px-6 py-4">

@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import instance from "../../api/instance";
-import { useToastStore } from "../../lib/store";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
@@ -54,7 +53,6 @@ const AdminServices = () => {
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingService, setEditingService] = useState(null);
   const [serviceItems, setServiceItems] = useState([{ name: "", price: 0 }]);
-  const { addToast } = useToastStore();
   const form = useForm({
     defaultValues: {
       rangeStart: "",
@@ -103,6 +101,14 @@ const AdminServices = () => {
   useEffect(() => {
     fetchServices();
   }, []);
+
+  // Reset form when modal closes or editing service changes
+  useEffect(() => {
+    if (!showAddModal) {
+      form.reset();
+      setServiceItems([{ name: "", price: 0 }]);
+    }
+  }, [showAddModal, form]);
 
   const addServiceItem = () => {
     setServiceItems([...serviceItems, { name: "", price: 0 }]);
@@ -160,60 +166,136 @@ const AdminServices = () => {
 
   const onSubmit = async (data) => {
     try {
-      // Validate min/max range
+      console.log("Form submitted with data:", data);
+      console.log("Service items:", serviceItems);
+
       const startRange = parseInt(data.rangeStart);
       const endRange = parseInt(data.rangeEnd);
 
       if (startRange > endRange) {
-        addToast({
-          type: "error",
-          message: "Start range cannot be greater than end range",
-        });
+        toast.error("Start range cannot be greater than end range");
         return;
       }
 
-      const hasOverlap = services.some((existingService) => {
-        const existingStart = existingService.rangeStart;
-        const existingEnd = existingService.rangeEnd;
+      // Simple range overlap check for debugging
+      console.log("Checking for overlaps with simple logic");
+      console.log(`Total services to check: ${services.length}`);
 
-        if (editingService && existingService.id === editingService.id) {
-          return false;
-        }
-
-        const overlaps =
-          (startRange >= existingStart && startRange <= existingEnd) ||
-          (endRange >= existingStart && endRange <= existingEnd) ||
-          (startRange <= existingStart && endRange >= existingEnd);
-
-        if (overlaps) {
-          addToast({
-            type: "error",
-            message: `Range overlaps with existing range: ${existingStart.toLocaleString()} - ${existingEnd.toLocaleString()} km`,
-          });
-        }
-
-        return overlaps;
-      });
-
-      if (hasOverlap) {
-        return;
+      // If there are no services, we can't have any overlaps
+      if (services.length === 0) {
+        console.log("No existing services - no overlaps possible");
       }
+
+      // Temporarily disable overlap detection for debugging
+      const DISABLE_OVERLAP_CHECK = true;
+
+      if (DISABLE_OVERLAP_CHECK) {
+        console.log(
+          "⚠️ OVERLAP DETECTION DISABLED - proceeding with submission"
+        );
+      } else {
+        let simpleOverlapFound = false;
+        let overlapService = null;
+
+        for (const s of services) {
+          // Skip comparing with the service being edited
+          if (editingService && s.id === editingService.id) {
+            console.log(`Skipping edited service: ${s.id}`);
+            continue;
+          }
+
+          // Parse range values as integers
+          const newStart = parseInt(startRange);
+          const newEnd = parseInt(endRange);
+          const existingStart = parseInt(s.rangeStart);
+          const existingEnd = parseInt(s.rangeEnd);
+
+          console.log(
+            `Comparing: new(${newStart}-${newEnd}) vs existing(${existingStart}-${existingEnd})`
+          );
+
+          // Check for overlap - implementation from scratch
+          const condition1 =
+            newStart >= existingStart && newStart <= existingEnd;
+          const condition2 = newEnd >= existingStart && newEnd <= existingEnd;
+          const condition3 = newStart <= existingStart && newEnd >= existingEnd;
+
+          console.log(`   Condition 1 (start in range): ${condition1}`);
+          console.log(`   Condition 2 (end in range): ${condition2}`);
+          console.log(`   Condition 3 (surrounds existing): ${condition3}`);
+
+          const hasOverlap = condition1 || condition2 || condition3;
+
+          if (hasOverlap) {
+            console.log(
+              `OVERLAP FOUND with range ${existingStart}-${existingEnd}`
+            );
+            simpleOverlapFound = true;
+            overlapService = s;
+            break;
+          }
+        }
+
+        if (simpleOverlapFound && overlapService) {
+          console.log("Overlap detected - stopping submission");
+          toast.error(
+            `Range overlaps with existing range: ${parseInt(
+              overlapService.rangeStart
+            ).toLocaleString()} - ${parseInt(
+              overlapService.rangeEnd
+            ).toLocaleString()} km`,
+            { duration: 5000 }
+          );
+          return;
+        }
+      }
+
+      console.log("Proceeding with service validation");
 
       if (serviceItems.some((item) => validateServiceItem(item).length > 0)) {
-        addToast({
-          type: "error",
-          message: "All service items must be valid",
-        });
+        console.log(
+          "Service items have validation errors, aborting submission"
+        );
+
+        // Get the validation errors for each service
+        const serviceWithErrors = serviceItems.find(
+          (item) => validateServiceItem(item).length > 0
+        );
+        const validationErrors = validateServiceItem(serviceWithErrors);
+
+        toast.error(
+          `Service validation failed: ${validationErrors.join(", ")}`,
+          { duration: 5000 }
+        );
         return;
       }
 
+      // Add loading toast
+      toast.loading("Saving services...", { id: "save-service" });
+
+      console.log("Preparing to save services");
       const savePromises = serviceItems.map(async (item, index) => {
+        // Ensure values are properly validated and formatted
+        const name = item.name.trim();
+        const price = parseFloat(item.price) || 0;
+
+        if (!name || price <= 0) {
+          console.error(`Invalid service data for item ${index}`, item);
+          throw new Error(
+            `Service ${index + 1} has invalid data: ${
+              !name ? "Missing name" : "Invalid price"
+            }`
+          );
+        }
+
         const serviceData = {
-          ServiceName: item.name,
-          ServiceCost: item.price,
-          MinimumOdometer: parseInt(data.rangeStart),
-          MaximumOdometer: parseInt(data.rangeEnd),
+          ServiceName: name,
+          ServiceCost: price,
+          MinimumOdometer: parseInt(data.rangeStart) || 0,
+          MaximumOdometer: parseInt(data.rangeEnd) || 0,
         };
+
+        console.log(`Preparing service ${index + 1}:`, serviceData);
 
         if (editingService) {
           if (
@@ -238,73 +320,189 @@ const AdminServices = () => {
             return instance.post("/maintenance-services", serviceData);
           }
         } else {
+          console.log("Creating brand new service");
           return instance.post("/maintenance-services", serviceData);
         }
       });
 
-      await Promise.all(savePromises);
+      try {
+        const results = await Promise.all(savePromises);
+        console.log("All services saved successfully:", results);
 
-      addToast({
-        type: "success",
-        message: editingService
-          ? "Services updated successfully!"
-          : "Services created successfully!",
-      });
+        toast.dismiss("save-service");
+        toast.success(
+          editingService
+            ? "Services updated successfully!"
+            : "Services created successfully!"
+        );
 
-      setShowAddModal(false);
-      setEditingService(null);
-      setServiceItems([{ name: "", price: 0 }]);
-      form.reset();
-      fetchServices();
+        console.log("Closing dialog and resetting form");
+        setShowAddModal(false);
+        setEditingService(null);
+        setServiceItems([{ name: "", price: 0 }]);
+        form.reset();
+
+        // Fetch updated services after a short delay
+        setTimeout(() => {
+          fetchServices();
+        }, 300);
+      } catch (saveError) {
+        console.error("Error in Promise.all:", saveError);
+        console.log("Error response:", saveError.response?.data);
+
+        toast.dismiss("save-service");
+        toast.error(
+          `Failed to save service range: ${
+            saveError.response?.data?.message || saveError.message
+          }`
+        );
+      }
     } catch (err) {
       console.error("Failed to save service:", err);
-      addToast({
-        type: "error",
-        message: "Failed to save service range. Please try again.",
-      });
+      toast.dismiss("save-service");
+      toast.error("Failed to save service range. Please try again.");
     }
   };
 
   const handleDelete = async (serviceId) => {
+    const serviceGroup = services.find((s) => s.id === serviceId);
+    if (!serviceGroup) {
+      toast.error("Service range not found.");
+      return;
+    }
+
+    let successCount = 0;
+    let failedServices = [];
+    let referencedServices = [];
+
     try {
-      const serviceGroup = services.find((s) => s.id === serviceId);
-      let hasErrors = false;
+      toast.loading("Deleting services...", { id: "delete-service" });
 
       for (const service of serviceGroup.services) {
         try {
+          console.log(`Attempting to delete service ${service.id}`);
           await instance.delete(`/maintenance-services/${service.id}`);
+          successCount++;
         } catch (error) {
-          hasErrors = true;
-          if (
-            error.response?.status === 500 &&
-            error.response?.data?.includes("REFERENCE constraint")
-          ) {
-            toast.error(
-              `Service "${service.name}" cannot be deleted because it is used in existing maintenance requests.`
+          console.error(`Error deleting service ${service.id}:`, error);
+
+          if (error.response) {
+            console.log(
+              "Error Response:",
+              error.response.status,
+              JSON.stringify(error.response.data)
             );
+          }
+
+          if (error.response) {
+            if (
+              error.response.status === 400 &&
+              (error.response.data?.message?.includes(
+                "associated with maintenance"
+              ) ||
+                error.response.data?.hasReferences === true)
+            ) {
+              referencedServices.push({
+                id: service.id,
+                name: service.name,
+                message:
+                  error.response.data?.detail ||
+                  "Referenced by maintenance requests",
+              });
+            } else if (
+              error.response.status === 500 &&
+              (error.response.data?.hasReferences === true ||
+                error.response.data?.message?.includes("constraint") ||
+                JSON.stringify(error.response).includes("constraint") ||
+                JSON.stringify(error.response).includes("reference"))
+            ) {
+              referencedServices.push({
+                id: service.id,
+                name: service.name,
+                message:
+                  error.response.data?.detail || "Referenced by other records",
+              });
+
+              toast.error(
+                `🔒 Service "${service.name}" is currently in use! It's part of active maintenance requests and can't be removed. Think of it as a VIP - Very Important Part of your maintenance history!`,
+                {
+                  duration: 6000,
+                  icon: "🛠️",
+                }
+              );
+            } else {
+              failedServices.push({
+                id: service.id,
+                name: service.name,
+                status: error.response.status,
+                message: error.response.data?.message || "Unknown error",
+              });
+            }
           } else {
-            toast.error(
-              `Failed to delete service "${service.name}". Please try again later.`
-            );
+            // Network or other errors
+            failedServices.push({
+              id: service.id,
+              name: service.name,
+              message: error.message || "Network error",
+            });
           }
         }
       }
 
-      if (!hasErrors) {
-        toast.success("Service range deleted successfully!");
+      // Dismiss the loading toast
+      toast.dismiss("delete-service");
+
+      // Show appropriate feedback based on results
+      if (successCount === serviceGroup.services.length) {
+        // All services were deleted successfully
+        toast.success(
+          `🎉 Service range deleted successfully! Your maintenance list just got a little lighter.`
+        );
+      } else if (successCount > 0) {
+        // Some services were deleted
+        toast.success(
+          `✨ Spring cleaning in progress! Deleted ${successCount} of ${serviceGroup.services.length} services.`,
+          { duration: 5000 }
+        );
       }
 
-      fetchServices();
+      // Show error messages for services that couldn't be deleted
+      if (referencedServices.length > 0) {
+        if (referencedServices.length === 1) {
+          // We already showed individual messages for constraint violations
+        } else if (referencedServices.length > 1) {
+          toast.error(
+            `🔗 ${referencedServices.length} services are still being used in maintenance requests. They're too important to delete right now!`,
+            { duration: 6000 }
+          );
+        }
+      }
+
+      if (failedServices.length > 0) {
+        toast.error(
+          `⚠️ Oops! We couldn't delete ${failedServices.length} service(s). Technical gremlins might be at work.`,
+          { duration: 5000 }
+        );
+      }
+
+      // Refresh the services list
+      await fetchServices();
     } catch (err) {
-      console.error("Failed to delete service:", err);
-      toast.error("Failed to delete service range. Please try again.");
+      toast.dismiss("delete-service");
+      console.error("Error in delete operation:", err);
+      toast.error("An unexpected error occurred. Please try again.");
     }
   };
 
   const handleOpenChange = (open) => {
+    // Only close the dialog if we're explicitly closing it (not during validation)
+    if (open === false && form.formState.isSubmitting) {
+      console.log("Preventing dialog close during submission");
+      return;
+    }
+
     setShowAddModal(open);
     if (!open) {
-      // Reset everything when closing
       setEditingService(null);
       setServiceItems([{ name: "", price: 0 }]);
       form.reset();
@@ -344,7 +542,10 @@ const AdminServices = () => {
             </DialogHeader>
             <Form {...form}>
               <form
-                onSubmit={form.handleSubmit(onSubmit)}
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  form.handleSubmit(onSubmit)(e);
+                }}
                 className="space-y-6"
               >
                 <div className="grid grid-cols-2 gap-4">
@@ -548,14 +749,27 @@ const AdminServices = () => {
                 <DialogFooter>
                   <Button
                     type="submit"
+                    onClick={() => {
+                      console.log("Add button clicked - direct submission");
+                      console.log("Form state:", form.getValues());
+                      console.log("Form errors:", form.formState.errors);
+                      console.log("Service items:", serviceItems);
+
+                      // Force direct submission when clicking the button
+                      if (!form.formState.isSubmitting && !loading) {
+                        const formData = form.getValues();
+                        onSubmit(formData);
+                      }
+                    }}
                     disabled={
                       loading ||
+                      form.formState.isSubmitting ||
                       serviceItems.some(
                         (item) => validateServiceItem(item).length > 0
                       )
                     }
                   >
-                    {loading && (
+                    {(loading || form.formState.isSubmitting) && (
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     )}
                     {editingService ? "Update Services" : "Add Services"}

@@ -10,9 +10,24 @@ const Readings = () => {
     const fetchReadings = async () => {
       try {
         const { data } = await instance.get("/odometer/history");
-        const sortedReadings = [...data].sort(
+
+        const deduplicatedReadings = [];
+        const seenKeys = new Set();
+
+        data.forEach((reading) => {
+          const dateOnly = new Date(reading.readingDate).toLocaleDateString();
+          const key = `${reading.licensePlateNumber}-${reading.reading}-${dateOnly}`;
+
+          if (!seenKeys.has(key)) {
+            seenKeys.add(key);
+            deduplicatedReadings.push(reading);
+          }
+        });
+
+        const sortedReadings = [...deduplicatedReadings].sort(
           (a, b) => new Date(b.readingDate) - new Date(a.readingDate)
         );
+
         setReadings(sortedReadings);
         setLoading(false);
       } catch (err) {
