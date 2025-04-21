@@ -6,7 +6,6 @@ import {
   GaugeCircle,
   LogOut,
   Menu,
-  Users,
   Wrench,
   X,
 } from "lucide-react";
@@ -24,17 +23,50 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useState } from "react";
 import AiAssistant from "@/components/AiAssistant";
 
-const MainLayout = () => {
-  const { isAuthenticated, logout, isAdmin, user } = useAuth();
+const MainLayout = ({ isAdmin: propIsAdmin }) => {
+  const { isAuthenticated, logout, isAdmin: authIsAdmin, user } = useAuth();
   const navigate = useNavigate();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  // Use prop value if provided, otherwise fall back to context value
+  const effectiveIsAdmin =
+    propIsAdmin !== undefined ? propIsAdmin : authIsAdmin;
 
   const handleLogout = () => {
     logout();
     navigate("/login");
   };
 
-  const NavLinks = () => (
+  const AdminNavLinks = () => (
+    <>
+      <Link
+        to="/admin/requests"
+        className="text-sm font-medium hover:text-primary transition-colors flex items-center gap-2"
+        onClick={() => setIsMobileMenuOpen(false)}
+      >
+        <ClipboardList className="h-4 w-4" />
+        Maintenance Requests
+      </Link>
+      <Link
+        to="/admin/vehicles"
+        className="text-sm font-medium hover:text-primary transition-colors flex items-center gap-2"
+        onClick={() => setIsMobileMenuOpen(false)}
+      >
+        <CarFront className="h-4 w-4" />
+        All Vehicles
+      </Link>
+      <Link
+        to="/admin/services"
+        className="text-sm font-medium hover:text-primary transition-colors flex items-center gap-2"
+        onClick={() => setIsMobileMenuOpen(false)}
+      >
+        <Wrench className="h-4 w-4" />
+        Services
+      </Link>
+    </>
+  );
+
+  const UserNavLinks = () => (
     <>
       <Link
         to="/"
@@ -60,35 +92,14 @@ const MainLayout = () => {
         <ClipboardList className="h-4 w-4" />
         Reading History
       </Link>
-
-      {isAdmin && (
-        <>
-          <Link
-            to="/admin/vehicles"
-            className="text-sm font-medium hover:text-primary transition-colors flex items-center gap-2"
-            onClick={() => setIsMobileMenuOpen(false)}
-          >
-            <CarFront className="h-4 w-4" />
-            All Vehicles
-          </Link>
-          <Link
-            to="/admin/services"
-            className="text-sm font-medium hover:text-primary transition-colors flex items-center gap-2"
-            onClick={() => setIsMobileMenuOpen(false)}
-          >
-            <Wrench className="h-4 w-4" />
-            Services
-          </Link>
-          <Link
-            to="/admin/requests"
-            className="text-sm font-medium hover:text-primary transition-colors flex items-center gap-2"
-            onClick={() => setIsMobileMenuOpen(false)}
-          >
-            <ClipboardList className="h-4 w-4" />
-            Maintenance Requests
-          </Link>
-        </>
-      )}
+      <Link
+        to="/maintenance"
+        className="text-sm font-medium hover:text-primary transition-colors flex items-center gap-2"
+        onClick={() => setIsMobileMenuOpen(false)}
+      >
+        <Wrench className="h-4 w-4" />
+        Maintenance Requests
+      </Link>
     </>
   );
 
@@ -100,21 +111,25 @@ const MainLayout = () => {
       <header className="sticky top-0 z-40 border-b border-border/50 bg-background/95 backdrop-blur-xl shadow-lg">
         <div className="container mx-auto py-4 px-6 flex justify-between items-center">
           <Link
-            to="/"
+            to={effectiveIsAdmin ? "/admin/requests" : "/"}
             className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-primary/50 flex items-center gap-2"
           >
             <CarFront className="h-6 w-6 text-primary" />
             <span className="hidden sm:inline">
-              Vehicle Maintenance Tracker
+              {effectiveIsAdmin
+                ? "Admin Dashboard"
+                : "Vehicle Maintenance Tracker"}
             </span>
-            <span className="sm:hidden">VMT</span>
+            <span className="sm:hidden">
+              {effectiveIsAdmin ? "Admin" : "VMT"}
+            </span>
           </Link>
 
           <nav className="flex items-center gap-6">
             {isAuthenticated ? (
               <>
                 <div className="hidden md:flex items-center gap-6">
-                  <NavLinks />
+                  {effectiveIsAdmin ? <AdminNavLinks /> : <UserNavLinks />}
                 </div>
 
                 <Sheet
@@ -128,7 +143,7 @@ const MainLayout = () => {
                   </SheetTrigger>
                   <SheetContent side="right" className="w-80">
                     <div className="flex flex-col gap-6 mt-8">
-                      <NavLinks />
+                      {effectiveIsAdmin ? <AdminNavLinks /> : <UserNavLinks />}
                       <Button
                         variant="destructive"
                         onClick={() => {
@@ -156,7 +171,7 @@ const MainLayout = () => {
                         </AvatarFallback>
                       </Avatar>
                       <span className="hidden lg:block font-medium">
-                        {user?.name || "User"}
+                        {user?.name || "User"} {effectiveIsAdmin && "(Admin)"}
                       </span>
                     </Button>
                   </DropdownMenuTrigger>

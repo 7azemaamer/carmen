@@ -10,7 +10,7 @@ const Unauthorized = () => {
       </p>
       <Link
         to="/"
-        className="px-6 py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+        className="px-6 py-3 bg-black text-white rounded-md hover:bg-black/70 transition-all duration-300 cursor-pointer"
       >
         Go Home
       </Link>

@@ -127,8 +127,27 @@ const AdminRequests = () => {
       });
 
       if (newStatus === "completed" && selectedCompletionDate) {
+        // Use the same fixed date string approach to ensure consistent date handling
+        const date = new Date(selectedCompletionDate);
+        const year = date.getFullYear();
+        const month = date.getMonth() + 1; // JavaScript months are 0-indexed
+        const day = date.getDate();
+
+        // Create fixed date string with noon UTC time to avoid day boundary issues
+        const fixedDateString = `${year}-${String(month).padStart(
+          2,
+          "0"
+        )}-${String(day).padStart(2, "0")}T12:00:00.000Z`;
+
+        console.log(
+          `Completion with status change - User selected: ${date.toLocaleString()}`
+        );
+        console.log(
+          `Completion with status change - Sending fixed date: ${fixedDateString}`
+        );
+
         await instance.put(`/maintenance/admin/completion/${requestId}`, {
-          completionDate: selectedCompletionDate,
+          completionDate: fixedDateString,
         });
       }
 
@@ -173,16 +192,52 @@ const AdminRequests = () => {
 
   const handleUpdateCompletionDate = async () => {
     try {
-      const formattedDate = selectedCompletionDate.toISOString();
+      if (!selectedCompletionDate) {
+        toast.error("Please select a completion date first");
+        return;
+      }
 
-      await instance.put(
+      // CRITICAL FIX FOR DATE ISSUE:
+      // When user selects April 3rd in Egypt (UTC+2), we need to make sure April 3rd is saved
+      // regardless of timezone conversions
+
+      // Get the selected date components in user's local timezone
+      const userDate = new Date(selectedCompletionDate);
+
+      // Create a date string in ISO format but force the time to be 12:00 UTC
+      // This ensures the same date is preserved when the backend converts to UTC
+      // We're setting a fixed time that's safely in the middle of the day
+      const year = userDate.getFullYear();
+      const month = userDate.getMonth() + 1; // JavaScript months are 0-indexed
+      const day = userDate.getDate();
+
+      // If we want "April 3rd" to be saved as "April 3rd" in the database:
+      // 1. Create a string with the exact date parts we want preserved
+      // 2. Set the time to noon to avoid any day boundary issues with timezone conversion
+      // 3. Make sure we use proper UTC notation (Z suffix) to prevent any additional conversions
+      const fixedDateString = `${year}-${String(month).padStart(
+        2,
+        "0"
+      )}-${String(day).padStart(2, "0")}T12:00:00.000Z`;
+
+      console.log(`User selected: ${userDate.toLocaleString()}`);
+      console.log(`Sending fixed date string: ${fixedDateString}`);
+
+      const response = await instance.put(
         `/maintenance/admin/completion/${selectedRequest.id}`,
         {
-          completionDate: formattedDate,
+          completionDate: fixedDateString,
         }
       );
 
       toast.success("Completion date updated successfully!");
+      console.log("Server response:", response.data);
+      console.log(`Date saved on server: ${response.data.date}`);
+
+      setSelectedRequest({
+        ...selectedRequest,
+        completionDate: response.data.date,
+      });
 
       fetchRequests();
     } catch (err) {
@@ -413,9 +468,14 @@ const AdminRequests = () => {
                         </p>
                       </div>
                       <div className="grid gap-1">
-                        <p className="text-sm text-muted-foreground">
-                          Completion Date
-                        </p>
+                        {selectedRequest.status === "in_progress" && (
+                          <>
+                            <p className="text-sm text-muted-foreground">
+                              Completion Date
+                            </p>
+                          </>
+                        )}
+
                         {selectedRequest.status === "completed" ? (
                           <p className="font-medium">
                             {selectedRequest.completionDate
@@ -425,6 +485,8 @@ const AdminRequests = () => {
                                 )
                               : "Not set"}
                           </p>
+                        ) : selectedRequest.status !== "in_progress" ? (
+                          <></>
                         ) : (
                           <div className="space-y-2">
                             <Popover>

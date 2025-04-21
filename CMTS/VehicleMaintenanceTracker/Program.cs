@@ -57,8 +57,6 @@ namespace VehicleMaintenanceTracker
 
             var app = builder.Build();
 
-
-
             if (app.Environment.IsDevelopment())
             {
                 app.UseSwagger();
@@ -86,27 +84,29 @@ namespace VehicleMaintenanceTracker
 
                 context.Database.Migrate();
 
-                // Seed admin user
-                if (!await context.Users.AnyAsync(u => u.Role == "Admin"))
-                {
-                    var adminUser = new User
-                    {
-                        Username = "admin",
-                        Email = "admin@system.com",
-                        PasswordHash = BCrypt.Net.BCrypt.HashPassword("Admin@123"),
-                        PhoneNumber = "01016928780",
-                        Address = "Admin Address",
-                        Role = "Admin",
-                        CreatedAt = DateTime.Now
-                    };
 
+                var adminUser = new User
+                {
+                    Username = "admin",
+                    Email = "admin@system.com",
+                    PasswordHash = BCrypt.Net.BCrypt.HashPassword("Admin@123"),
+                    PhoneNumber = "01016928780",
+                    Address = "Admin Address",
+                    Role = "Admin",
+                    CreatedAt = DateTime.Now
+                };
+
+                // Check if this exact admin already exists to avoid duplicates
+                if (!await context.Users.AnyAsync(u => u.Username == "admin" && u.Email == "admin@system.com"))
+                {
                     context.Users.Add(adminUser);
                     await context.SaveChangesAsync();
-
                     Console.WriteLine("Default admin user created");
                 }
-
-               
+                else
+                {
+                    Console.WriteLine("Default admin user already exists");
+                }
             }
         }
     }

@@ -17,7 +17,6 @@ import AdminServices from "../pages/admin/Services";
 import AdminRequests from "../pages/admin/Requests";
 import Maintenance from "../pages/user/Maintenance";
 import AdminSetup from "../pages/AdminSetup";
-import FirstAdminSetup from "../pages/FirstAdminSetup";
 
 const router = createBrowserRouter([
   {
@@ -40,10 +39,6 @@ const router = createBrowserRouter([
       {
         path: "adminauth",
         element: <AdminSetup />,
-      },
-      {
-        path: "admin-first-setup",
-        element: <FirstAdminSetup />,
       },
 
       // Protected routes for authenticated users

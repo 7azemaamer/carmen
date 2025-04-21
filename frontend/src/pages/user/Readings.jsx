@@ -59,7 +59,7 @@ const Readings = () => {
           </p>
           <a
             href="/"
-            className="mt-4 inline-block px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+            className="mt-4 inline-block px-4 py-2 bg-black text-white rounded-md hover:bg-black/70"
           >
             Submit a Reading
           </a>

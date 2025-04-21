@@ -32,7 +32,6 @@ const AdminSetup = () => {
     try {
       setLoading(true);
 
-      // Try the admin creation endpoint first
       try {
         const response = await instance.post("/admin/create-admin", {
           Username: data.username,
@@ -60,7 +59,7 @@ const AdminSetup = () => {
               "You need admin privileges for this action. See instructions below for creating the first admin.",
           });
         } else {
-          throw err; 
+          throw err;
         }
       }
     } catch (err) {
@@ -103,7 +102,7 @@ const AdminSetup = () => {
             </div>
             <button
               type="submit"
-              className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700"
+              className="w-full bg-black text-white py-2 px-4 rounded-md hover:bg-black/70 transition-all duration-300 cursor-pointer"
             >
               Access Admin Setup
             </button>
@@ -229,7 +228,7 @@ const AdminSetup = () => {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 disabled:opacity-50"
+            className="w-full bg-black text-white py-2 px-4 rounded-md hover:bg-black/70 tr disabled:opacity-50"
           >
             {loading ? "Creating Account..." : "Create Admin Account"}
           </button>

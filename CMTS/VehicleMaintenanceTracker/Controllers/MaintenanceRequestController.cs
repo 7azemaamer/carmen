@@ -211,10 +211,14 @@ namespace VehicleMaintenanceTracker.Controllers
                 return NotFound(new { message = "Maintenance request not found." });
             }
 
-            request.CompletionDate = completionDto.CompletionDate;
+            request.CompletionDate = completionDto.CompletionDate.ToUniversalTime();
+            
             await _context.SaveChangesAsync();
 
-            return Ok(new { message = "Completion date updated successfully." });
+            return Ok(new { 
+                message = "Completion date updated successfully.",
+                date = request.CompletionDate
+            });
         }
 
 
