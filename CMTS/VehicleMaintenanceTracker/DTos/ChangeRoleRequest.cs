@@ -6,6 +6,6 @@ namespace VehicleMaintenanceTracker.DTos
     {
         [Required]
         [StringLength(10)]
-        public string NewRole { get; set; } // "Admin" or "User"
+        public required string NewRole { get; set; } // "Admin" or "User"
     }
 }

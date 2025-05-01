@@ -198,11 +198,55 @@ namespace VehicleMaintenanceTracker.Controllers
             });
         }
 
+        [HttpDelete("{vehicleId}")]
+        public async Task<IActionResult> DeleteVehicle(int vehicleId)
+        {
+            var userId = GetUserIdFromToken();
+            if (userId == null)
+            {
+                return Unauthorized(new { message = "Unauthorized user." });
+            }
 
+            var vehicle = await _context.Vehicles.FirstOrDefaultAsync(v => v.VehicleId == vehicleId && v.UserId == userId.Value);
+            if (vehicle == null)
+            {
+                return NotFound(new { message = "Vehicle not found or you don't have access to it." });
+            }
 
+            // Check if there are any maintenance requests for this vehicle
+            var hasMaintenanceRequests = await _context.MaintenanceRequests.AnyAsync(m => m.VehicleId == vehicleId);
+            
+            // Check if there are any odometer readings for this vehicle
+            var hasOdometerReadings = await _context.OdometerReadings.AnyAsync(o => o.VehicleId == vehicleId);
+
+            if (hasMaintenanceRequests || hasOdometerReadings)
+            {
+                // Instead of deleting, mark as inactive
+                vehicle.Status = "Inactive";
+                await _context.SaveChangesAsync();
+                
+                return Ok(new
+                {
+                    message = "Vehicle has associated records and was marked as inactive instead of being deleted.",
+                    vehicleId = vehicle.VehicleId
+                });
+            }
+            else
+            {
+                // No associated records, safe to delete
+                _context.Vehicles.Remove(vehicle);
+                await _context.SaveChangesAsync();
+                
+                return Ok(new
+                {
+                    message = "Vehicle deleted successfully.",
+                    vehicleId = vehicleId
+                });
+            }
+        }
     }
 }
-    
+
 
 
 

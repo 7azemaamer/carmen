@@ -47,6 +47,8 @@ const Home = () => {
   const [vehicles, setVehicles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [latestReading, setLatestReading] = useState(null);
+  const [vehicleReadings, setVehicleReadings] = useState({}); // Store readings by vehicle ID
+  const [selectedVehicleFilter, setSelectedVehicleFilter] = useState("all"); // Add vehicle filter state
   const [showServiceModal, setShowServiceModal] = useState(false);
   const [selectedServices, setSelectedServices] = useState([]);
   const [availableServices, setAvailableServices] = useState([]);
@@ -83,6 +85,27 @@ const Home = () => {
       const readings = readingRes.data;
       const latest = readings.length > 0 ? readings[0] : null;
       setLatestReading(latest);
+
+      // Group readings by vehicle ID
+      const readingsByVehicle = {};
+      readings.forEach((reading) => {
+        const vehicleId = reading.vehicleId || reading.VehicleId; // Handle different API response formats
+        if (!readingsByVehicle[vehicleId]) {
+          readingsByVehicle[vehicleId] = [];
+        }
+        readingsByVehicle[vehicleId].push(reading);
+      });
+
+      // Sort readings for each vehicle by date (newest first)
+      Object.keys(readingsByVehicle).forEach((vehicleId) => {
+        readingsByVehicle[vehicleId].sort(
+          (a, b) =>
+            new Date(b.readingDate || b.date) -
+            new Date(a.readingDate || a.date)
+        );
+      });
+
+      setVehicleReadings(readingsByVehicle);
 
       const mappedServices = servicesRes.data.map((service) => ({
         id: service.id,
@@ -135,10 +158,15 @@ const Home = () => {
         return;
       }
 
-      if (reading <= latestReading?.reading) {
+      // Get last reading for this specific vehicle
+      const vehicleReadingsArray = vehicleReadings[vehicleId] || [];
+      const lastReadingForVehicle =
+        vehicleReadingsArray.length > 0 ? vehicleReadingsArray[0].reading : 0;
+
+      if (lastReadingForVehicle > 0 && reading <= lastReadingForVehicle) {
         form.setError("reading", {
           type: "manual",
-          message: "New reading must be higher than the previous reading",
+          message: `New reading must be higher than the previous reading (${lastReadingForVehicle.toLocaleString()} km) for this vehicle`,
         });
         return;
       }
@@ -350,12 +378,36 @@ const Home = () => {
             {latestReading ? (
               <>
                 <div className="text-2xl font-bold">
-                  {latestReading.reading.toLocaleString()} km
+                  {selectedVehicleFilter === "all"
+                    ? (
+                        latestReading.reading ||
+                        latestReading.Reading ||
+                        0
+                      ).toLocaleString()
+                    : vehicleReadings[selectedVehicleFilter]?.[0]
+                    ? (
+                        vehicleReadings[selectedVehicleFilter][0].reading ||
+                        vehicleReadings[selectedVehicleFilter][0].Reading ||
+                        0
+                      ).toLocaleString()
+                    : "No reading available"}{" "}
+                  km
                 </div>
                 <div className="text-xs text-muted-foreground">
                   Last updated{" "}
-                  {latestReading?.date
-                    ? formatDate(latestReading.date)
+                  {selectedVehicleFilter === "all"
+                    ? latestReading?.readingDate || latestReading?.date
+                      ? formatDate(
+                          latestReading.readingDate || latestReading.date
+                        )
+                      : "Unknown"
+                    : vehicleReadings[selectedVehicleFilter]?.[0]
+                        ?.readingDate ||
+                      vehicleReadings[selectedVehicleFilter]?.[0]?.date
+                    ? formatDate(
+                        vehicleReadings[selectedVehicleFilter][0].readingDate ||
+                          vehicleReadings[selectedVehicleFilter][0].date
+                      )
                     : "Unknown"}
                 </div>
                 {daysSinceLastReading > 7 && (
@@ -388,20 +440,43 @@ const Home = () => {
               <div className="flex items-center justify-between text-sm">
                 <span>Next Service</span>
                 <Badge variant="outline">
-                  {latestReading
+                  {selectedVehicleFilter === "all"
+                    ? latestReading
+                      ? `${(
+                          (Math.floor(latestReading.reading / 10000) + 1) *
+                          10000
+                        ).toLocaleString()} km`
+                      : "N/A"
+                    : vehicleReadings[selectedVehicleFilter]?.[0]
                     ? `${(
-                        (Math.floor(latestReading.reading / 10000) + 1) *
+                        (Math.floor(
+                          vehicleReadings[selectedVehicleFilter][0].reading /
+                            10000
+                        ) +
+                          1) *
                         10000
                       ).toLocaleString()} km`
                     : "N/A"}
                 </Badge>
               </div>
-              {latestReading && (
-                <Progress
-                  value={((latestReading.reading % 10000) / 10000) * 100}
-                  className="h-2"
-                />
-              )}
+              {selectedVehicleFilter === "all"
+                ? latestReading && (
+                    <Progress
+                      value={((latestReading.reading % 10000) / 10000) * 100}
+                      className="h-2"
+                    />
+                  )
+                : vehicleReadings[selectedVehicleFilter]?.[0] && (
+                    <Progress
+                      value={
+                        ((vehicleReadings[selectedVehicleFilter][0].reading %
+                          10000) /
+                          10000) *
+                        100
+                      }
+                      className="h-2"
+                    />
+                  )}
             </div>
           </CardContent>
         </Card>

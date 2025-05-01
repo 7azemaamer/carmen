@@ -19,13 +19,13 @@ namespace VehicleMaintenanceTracker.DTos
     public class UpdateProfileRequest
     {
         [StringLength(50)]
-        public string Username { get; set; }
+        public required string Username { get; set; }
 
         [StringLength(20)]
-        public string PhoneNumber { get; set; }
+        public required string PhoneNumber { get; set; }
 
         [StringLength(200)]
-        public string Address { get; set; }
+        public required string Address { get; set; }
     }
 
 }

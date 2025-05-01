@@ -17,7 +17,8 @@ namespace VehicleMaintenanceTracker.Services
 
         public string GenerateToken(int userId, string username, string email, string role)
         {
-            var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]));
+            var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"] ?? 
+                throw new InvalidOperationException("JWT Key is not configured")));
             var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
 
             var claims = new List<Claim>
@@ -41,12 +42,13 @@ namespace VehicleMaintenanceTracker.Services
 
         public bool ValidateToken(string token, out List<Claim> claims)
         {
-            claims = null;
+            claims = new List<Claim>(); // Initialize with empty list instead of null
 
             try
             {
                 var tokenHandler = new JwtSecurityTokenHandler();
-                var key = Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]);
+                var key = Encoding.UTF8.GetBytes(_configuration["Jwt:Key"] ?? 
+                    throw new InvalidOperationException("JWT Key is not configured"));
 
                 tokenHandler.ValidateToken(token, new TokenValidationParameters
                 {

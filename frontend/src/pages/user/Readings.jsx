@@ -1,8 +1,18 @@
 import { useState, useEffect } from "react";
 import instance from "../../api/instance";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const Readings = () => {
   const [readings, setReadings] = useState([]);
+  const [vehicles, setVehicles] = useState([]);
+  const [filteredReadings, setFilteredReadings] = useState([]);
+  const [selectedVehicle, setSelectedVehicle] = useState("all");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -29,6 +39,12 @@ const Readings = () => {
         );
 
         setReadings(sortedReadings);
+
+        const uniqueVehicles = Array.from(
+          new Set(sortedReadings.map((reading) => reading.vehicleType))
+        );
+        setVehicles(uniqueVehicles);
+
         setLoading(false);
       } catch (err) {
         console.error("Failed to fetch readings:", err);
@@ -39,6 +55,16 @@ const Readings = () => {
 
     fetchReadings();
   }, []);
+
+  useEffect(() => {
+    if (selectedVehicle === "all") {
+      setFilteredReadings(readings);
+    } else {
+      setFilteredReadings(
+        readings.filter((reading) => reading.vehicleType === selectedVehicle)
+      );
+    }
+  }, [selectedVehicle, readings]);
 
   if (loading) {
     return <div className="text-center py-10">Loading...</div>;
@@ -52,7 +78,26 @@ const Readings = () => {
     <div className="max-w-4xl mx-auto">
       <h1 className="text-3xl font-bold mb-6">Odometer Reading History</h1>
 
-      {readings.length === 0 ? (
+      <div className="mb-6">
+        <Select
+          value={selectedVehicle}
+          onValueChange={(value) => setSelectedVehicle(value)}
+        >
+          <SelectTrigger className="w-full md:w-64">
+            <SelectValue placeholder="Filter by vehicle" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Vehicles</SelectItem>
+            {vehicles.map((vehicle, index) => (
+              <SelectItem key={index} value={vehicle}>
+                {vehicle}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      {filteredReadings.length === 0 ? (
         <div className="bg-white p-6 rounded-lg shadow-md text-center">
           <p className="text-gray-600">
             You haven't submitted any odometer readings yet.
@@ -66,19 +111,21 @@ const Readings = () => {
         </div>
       ) : (
         <>
-          {readings.length > 0 && (
+          {filteredReadings.length > 0 && (
             <div className="mb-6 bg-white p-6 rounded-lg shadow-md">
               <h2 className="text-xl font-semibold mb-4">Statistics</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="bg-blue-50 p-4 rounded-md">
                   <p className="text-sm text-blue-700 mb-1">Total Readings</p>
-                  <p className="text-2xl font-bold">{readings.length}</p>
+                  <p className="text-2xl font-bold">
+                    {filteredReadings.length}
+                  </p>
                 </div>
 
                 <div className="bg-green-50 p-4 rounded-md">
                   <p className="text-sm text-green-700 mb-1">Latest Reading</p>
                   <p className="text-2xl font-bold">
-                    {readings[0]?.reading.toLocaleString()} km
+                    {filteredReadings[0]?.reading.toLocaleString()} km
                   </p>
                 </div>
               </div>
@@ -97,14 +144,14 @@ const Readings = () => {
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Date
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  {/* <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Change
-                  </th>
+                  </th> */}
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {readings.map((reading, index) => {
-                  const prevReading = readings[index + 1];
+                {filteredReadings.map((reading, index) => {
+                  const prevReading = filteredReadings[index + 1];
                   const change = prevReading
                     ? reading.reading - prevReading.reading
                     : 0;
@@ -126,7 +173,7 @@ const Readings = () => {
                           {new Date(reading.readingDate).toLocaleDateString()}
                         </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
+                      {/* <td className="px-6 py-4 whitespace-nowrap">
                         {prevReading ? (
                           <div
                             className={`text-sm ${
@@ -139,7 +186,7 @@ const Readings = () => {
                         ) : (
                           <div className="text-sm text-gray-500">N/A</div>
                         )}
-                      </td>
+                      </td> */}
                     </tr>
                   );
                 })}

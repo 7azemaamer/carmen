@@ -26,7 +26,7 @@ namespace VehicleMaintenanceTracker.Modules
 
 
         [StringLength(200)]
-        public string Address { get; set; }
+        public required string Address { get; set; }
 
 
         [Required]
