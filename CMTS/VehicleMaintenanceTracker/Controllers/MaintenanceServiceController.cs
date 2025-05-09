@@ -31,18 +31,6 @@ namespace VehicleMaintenanceTracker.Controllers
                 return BadRequest(new { message = "Invalid service data." });
             }
 
-            // Check if a service with the same name already exists
-            var existingService = await _context.MaintenanceServices
-                .FirstOrDefaultAsync(s => s.ServiceName.ToLower() == serviceDto.ServiceName.ToLower());
-            
-            if (existingService != null)
-            {
-                return BadRequest(new { 
-                    message = "A service with this name already exists.", 
-                    serviceName = serviceDto.ServiceName 
-                });
-            }
-
             var service = new MaintenanceService
             {
                 ServiceName = serviceDto.ServiceName,
@@ -112,20 +100,6 @@ namespace VehicleMaintenanceTracker.Controllers
             if (service == null)
                 return NotFound(new { message = "Service not found." });
 
-            // Check if a service with the same name already exists (excluding the current service)
-            var existingService = await _context.MaintenanceServices
-                .FirstOrDefaultAsync(s => 
-                    s.ServiceId != id && 
-                    s.ServiceName.ToLower() == serviceDto.ServiceName.ToLower());
-            
-            if (existingService != null)
-            {
-                return BadRequest(new { 
-                    message = "Another service with this name already exists.", 
-                    serviceName = serviceDto.ServiceName 
-                });
-            }
-
             service.ServiceName = serviceDto.ServiceName;
             service.ServiceCost = serviceDto.ServiceCost;
             service.MinimumOdometer = serviceDto.MinimumOdometer;
@@ -187,10 +161,6 @@ namespace VehicleMaintenanceTracker.Controllers
                 });
             }
         }
-
-      
-
-
     }
 }
 
